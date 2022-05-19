@@ -360,10 +360,10 @@ static int do_boot_rockchip(cmd_tbl_t *cmdtp, int flag,
 
 	ret = part_get_info_by_name(dev_desc, part_name, &part);
 	if (ret < 0) {
-		printf("Could not find %s part\n", part.name);
+		printf("Could not find %s part\n", part_name);
 		return CMD_RET_FAILURE;
 	} else {
-		printf("%s: Found %s part\n", __func__, part.name);
+		printf("%s: Found %s part\n", __func__, part_name);
 	}
 
 	return boot_rockchip_image(dev_desc, &part) ? CMD_RET_FAILURE : 0;

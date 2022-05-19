@@ -6,6 +6,7 @@
  */
 
 #include <common.h>
+#include <clk.h>
 #include <dm.h>
 #include <dm/lists.h>
 #include <dm/of_access.h>
@@ -118,6 +119,7 @@ struct rockchip_u3phy {
 	struct udevice *dev;
 	struct regmap *u3phy_grf;
 	struct regmap *grf;
+	struct clk *clks[U3PHY_MAX_CLKS];
 	struct udevice *vbus_supply;
 	struct reset_ctl rsts[U3PHY_RESET_MAX];
 	struct rockchip_u3phy_apbcfg apbcfg;
@@ -179,11 +181,41 @@ static int rockchip_u3phy_exit(struct phy *phy)
 	return 0;
 }
 
+static int rockchip_u3phy_clk_enable(struct rockchip_u3phy *u3phy)
+{
+	int ret, clk;
+
+	for (clk = 0; clk < U3PHY_MAX_CLKS && u3phy->clks[clk]; clk++) {
+		ret = clk_enable(u3phy->clks[clk]);
+		if (ret)
+			goto err_disable_clks;
+	}
+	return 0;
+
+err_disable_clks:
+	while (--clk >= 0)
+		clk_disable(u3phy->clks[clk]);
+	return ret;
+}
+
+static void rockchip_u3phy_clk_disable(struct rockchip_u3phy *u3phy)
+{
+	int clk;
+
+	for (clk = U3PHY_MAX_CLKS - 1; clk >= 0; clk--)
+		if (u3phy->clks[clk])
+			clk_disable(u3phy->clks[clk]);
+}
+
 static int rockchip_u3phy_power_on(struct phy *phy)
 {
 	struct udevice *parent = dev_get_parent(phy->dev);
 	struct rockchip_u3phy *u3phy = dev_get_priv(parent);
 	int ret = 0;
+
+	ret = rockchip_u3phy_clk_enable(u3phy);
+	if (ret)
+		return ret;
 
 	/* Vbus regulator */
 	if (!u3phy->vbus_supply) {
@@ -220,6 +252,8 @@ static int rockchip_u3phy_power_off(struct phy *phy)
 
 		u3phy->vbus_supply = NULL;
 	}
+
+	rockchip_u3phy_clk_disable(u3phy);
 
 	return 0;
 }
@@ -347,13 +381,14 @@ static int rockchip_u3phy_port_init(struct rockchip_u3phy *u3phy,
 		return PTR_ERR(u3phy_port->base);
 	}
 
-	if (!of_node_cmp(child_np->name, "pipe")) {
-		u3phy_port->type = U3PHY_TYPE_PIPE;
-		u3phy_port->refclk_25m_quirk =
-			ofnode_read_bool(np_to_ofnode(child_np),
-					 "rockchip,refclk-25m-quirk");
-	} else {
-		u3phy_port->type = U3PHY_TYPE_UTMI;
+	u3phy_port->type = U3PHY_TYPE_UTMI;
+	if (child_np->name && child_np->name[0] && !IS_ERR(child_np->name)) {
+		if (child_np->name && !of_node_cmp(child_np->name, "pipe")) {
+			u3phy_port->type = U3PHY_TYPE_PIPE;
+			u3phy_port->refclk_25m_quirk =
+				ofnode_read_bool(np_to_ofnode(child_np),
+						 "rockchip,refclk-25m-quirk");
+		}
 	}
 
 	if (u3phy->cfgs->phy_tuning) {
@@ -415,16 +450,20 @@ static int rockchip_u3phy_probe(struct udevice *udev)
 		return ret;
 	}
 
+	ret = rockchip_u3phy_clk_enable(u3phy);
+	if (ret) {
+		dev_err(dev, "clk enable failed, ret(%d)\n", ret);
+		return ret;
+	}
+
 	rockchip_u3phy_rest_assert(u3phy);
 	rockchip_u3phy_rest_deassert(u3phy, U3PHY_APB_RST | U3PHY_POR_RST);
 
 	index = 0;
 	ofnode_for_each_subnode(child_np, udev->node) {
 		struct rockchip_u3phy_port *u3phy_port = &u3phy->ports[index];
-
 		u3phy_port->index = index;
-		ret = rockchip_u3phy_port_init(u3phy, u3phy_port,
-					       ofnode_to_np(child_np));
+		ret = rockchip_u3phy_port_init(u3phy, u3phy_port, ofnode_to_np(child_np));
 		if (ret) {
 			dev_err(udev, "u3phy port init failed,ret(%d)\n", ret);
 			goto put_child;
@@ -436,6 +475,7 @@ static int rockchip_u3phy_probe(struct udevice *udev)
 	}
 
 	rockchip_u3phy_rest_deassert(u3phy, U3PHY_MAC_RST);
+	rockchip_u3phy_clk_disable(u3phy);
 
 	dev_info(udev, "Rockchip u3phy initialized successfully\n");
 	return 0;

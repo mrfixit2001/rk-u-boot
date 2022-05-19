@@ -160,13 +160,20 @@
 #define BOOT_ANDROID_COMMAND
 #endif
 
+#ifdef CONFIG_CMD_BOOT_ROCKCHIP
+#define BOOT_RKP \
+	"bootrkp;"
+#else
+#define BOOT_RKP
+#endif
+
 #if defined(CONFIG_AVB_VBMETA_PUBLIC_KEY_VALIDATE)
 #define RKIMG_BOOTCOMMAND			\
 	BOOT_ANDROID_COMMAND
 #else
 #define RKIMG_BOOTCOMMAND			\
 	BOOT_ANDROID_COMMAND \
-	"bootrkp;"				\
+	BOOT_RKP				\
 	"run distro_bootcmd;"
 #endif
 

@@ -48,6 +48,8 @@
 #include <asm/arch/resource_img.h>
 #include <asm/arch/rk_atags.h>
 #include <asm/arch/vendor.h>
+#include <hash.h>
+#include <u-boot/sha256.h>
 #ifdef CONFIG_ROCKCHIP_EINK_DISPLAY
 #include <rk_eink.h>
 #endif
@@ -88,6 +90,97 @@ __weak int rk_board_init(void)
 #define CPUID_OFF	0x07
 
 #define MAX_ETHERNET	0x2
+
+static int rockchip_set_serialno(void)
+{
+	u8 low[CPUID_LEN / 2], high[CPUID_LEN / 2];
+	u8 cpuid[CPUID_LEN] = {0};
+	char cpuid_str[CPUID_LEN * 2 + 1];
+#ifdef CONFIG_ROCKCHIP_VENDOR_PARTITION
+	char serialno_str[VENDOR_SN_MAX];
+#else
+	char serialno_str[16];
+#endif
+	int ret = 0, i;
+	u64 serialno;
+
+#ifdef CONFIG_ROCKCHIP_VENDOR_PARTITION
+	/* Read serial number from vendor storage part */
+	memset(serialno_str, 0, VENDOR_SN_MAX);
+
+	ret = vendor_storage_read(VENDOR_SN_ID, serialno_str, (VENDOR_SN_MAX-1));
+	if (ret > 0) {
+		i = strlen(serialno_str);
+		for (; i > 0; i--) {
+			if ((serialno_str[i] >= 'a' && serialno_str[i] <= 'z') ||
+			    (serialno_str[i] >= 'A' && serialno_str[i] <= 'Z') ||
+			    (serialno_str[i] >= '0' && serialno_str[i] <= '9'))
+				break;
+		}
+
+		serialno_str[i + 1] = 0x0;
+		env_set("serial#", serialno_str);
+	} else {
+#endif
+#if defined(CONFIG_ROCKCHIP_EFUSE) || defined(CONFIG_ROCKCHIP_OTP)
+		struct udevice *dev;
+
+		/* retrieve the device */
+		if (IS_ENABLED(CONFIG_ROCKCHIP_EFUSE))
+			ret = uclass_get_device_by_driver(UCLASS_MISC,
+							  DM_GET_DRIVER(rockchip_efuse),
+							  &dev);
+		else
+			ret = uclass_get_device_by_driver(UCLASS_MISC,
+							  DM_GET_DRIVER(rockchip_otp),
+							  &dev);
+
+		if (ret) {
+			printf("%s: could not find efuse/otp device\n", __func__);
+			goto gen_rand_cpu;
+		}
+
+		/* read the cpu_id range from the efuses */
+		ret = misc_read(dev, CPUID_OFF, &cpuid, sizeof(cpuid));
+		if (ret) {
+			printf("%s: read cpuid from efuse/otp failed, ret=%d\n",
+			       __func__, ret);
+			goto gen_rand_cpu;
+		} else {
+			goto gen_serial;
+		}
+
+gen_rand_cpu:
+#endif
+		/* generate random cpuid */
+		for (i = 0; i < CPUID_LEN; i++)
+			cpuid[i] = (u8)(rand());
+
+gen_serial:
+		/* Generate the serial number based on CPU ID */
+		for (i = 0; i < 8; i++) {
+			low[i] = cpuid[1 + (i << 1)];
+			high[i] = cpuid[i << 1];
+		}
+
+		serialno = crc32_no_comp(0, low, 8);
+		serialno |= (u64)crc32_no_comp(serialno, high, 8) << 32;
+		snprintf(serialno_str, sizeof(serialno_str), "%llx", serialno);
+
+		env_set("serial#", serialno_str);
+
+		/* Save cpuid as string */
+		memset(cpuid_str, 0, sizeof(cpuid_str));
+		for (i = 0; i < 16; i++)
+			sprintf(&cpuid_str[i * 2], "%02x", cpuid[i]);
+
+		env_set("cpuid#", cpuid_str);
+#ifdef CONFIG_ROCKCHIP_VENDOR_PARTITION
+	}
+#endif
+
+	return ret;
+}
 
 static int rockchip_set_ethaddr(void)
 {
@@ -133,83 +226,46 @@ static int rockchip_set_ethaddr(void)
 			printf("%s: vendor_storage_write failed %d\n",
 			       __func__, ret);
 	}
+#elif CONFIG_IS_ENABLED(CMD_NET)
+	int ret;
+	const char *cpuid = env_get("cpuid#");
+	u8 hash[SHA256_SUM_LEN];
+	int size = sizeof(hash);
+	u8 mac_addr[6];
+	char buf[ARP_HLEN_ASCII + 1];
+
+	/* Only generate a MAC address, if none is set in the environment */
+	if (env_get("ethaddr"))
+		return 0;
+
+	if (!cpuid) {
+		debug("%s: could not retrieve 'cpuid#'\n", __func__);
+		return 0;
+	}
+
+	ret = hash_block("sha256", (void *)cpuid, strlen(cpuid), hash, &size);
+	if (ret) {
+		debug("%s: failed to calculate SHA256\n", __func__);
+		return 0;
+	}
+
+	/* Copy 6 bytes of the hash to base the MAC address on */
+	memcpy(mac_addr, hash, 6);
+
+	/* Make this a valid MAC address and set it */
+	mac_addr[0] &= 0xfe;  /* clear multicast bit */
+	mac_addr[0] |= 0x02;  /* set local assignment bit (IEEE802) */
+	sprintf(buf, "%pM", mac_addr);
+	env_set("ethaddr", buf);
+
+	/* Make a valid MAC address for eth1 */
+	mac_addr[5] += 0x20;
+	mac_addr[5] &= 0xff;
+	sprintf(buf, "%pM", mac_addr);
+	env_set("eth1addr", buf);
 #endif
 
 	return 0;
-}
-
-static int rockchip_set_serialno(void)
-{
-	u8 low[CPUID_LEN / 2], high[CPUID_LEN / 2];
-	u8 cpuid[CPUID_LEN] = {0};
-	char serialno_str[VENDOR_SN_MAX];
-	int ret = 0, i;
-	u64 serialno;
-
-	/* Read serial number from vendor storage part */
-	memset(serialno_str, 0, VENDOR_SN_MAX);
-
-#ifdef CONFIG_ROCKCHIP_VENDOR_PARTITION
-	ret = vendor_storage_read(VENDOR_SN_ID, serialno_str, (VENDOR_SN_MAX-1));
-	if (ret > 0) {
-		i = strlen(serialno_str);
-		for (; i > 0; i--) {
-			if ((serialno_str[i] >= 'a' && serialno_str[i] <= 'z') ||
-			    (serialno_str[i] >= 'A' && serialno_str[i] <= 'Z') ||
-			    (serialno_str[i] >= '0' && serialno_str[i] <= '9'))
-				break;
-		}
-
-		serialno_str[i + 1] = 0x0;
-		env_set("serial#", serialno_str);
-	} else {
-#endif
-#if defined(CONFIG_ROCKCHIP_EFUSE) || defined(CONFIG_ROCKCHIP_OTP)
-		struct udevice *dev;
-
-		/* retrieve the device */
-		if (IS_ENABLED(CONFIG_ROCKCHIP_EFUSE))
-			ret = uclass_get_device_by_driver(UCLASS_MISC,
-							  DM_GET_DRIVER(rockchip_efuse),
-							  &dev);
-		else
-			ret = uclass_get_device_by_driver(UCLASS_MISC,
-							  DM_GET_DRIVER(rockchip_otp),
-							  &dev);
-
-		if (ret) {
-			printf("%s: could not find efuse/otp device\n", __func__);
-			return ret;
-		}
-
-		/* read the cpu_id range from the efuses */
-		ret = misc_read(dev, CPUID_OFF, &cpuid, sizeof(cpuid));
-		if (ret) {
-			printf("%s: read cpuid from efuse/otp failed, ret=%d\n",
-			       __func__, ret);
-			return ret;
-		}
-#else
-		/* generate random cpuid */
-		for (i = 0; i < CPUID_LEN; i++)
-			cpuid[i] = (u8)(rand());
-#endif
-		/* Generate the serial number based on CPU ID */
-		for (i = 0; i < 8; i++) {
-			low[i] = cpuid[1 + (i << 1)];
-			high[i] = cpuid[i << 1];
-		}
-
-		serialno = crc32_no_comp(0, low, 8);
-		serialno |= (u64)crc32_no_comp(serialno, high, 8) << 32;
-		snprintf(serialno_str, sizeof(serialno_str), "%llx", serialno);
-
-		env_set("serial#", serialno_str);
-#ifdef CONFIG_ROCKCHIP_VENDOR_PARTITION
-	}
-#endif
-
-	return ret;
 }
 
 #if defined(CONFIG_USB_FUNCTION_FASTBOOT)
@@ -365,8 +421,10 @@ static void cmdline_handle(void)
 
 int board_late_init(void)
 {
-	rockchip_set_ethaddr();
+	// Serialno must be called before ethaddr
 	rockchip_set_serialno();
+	rockchip_set_ethaddr();
+
 	setup_download_mode();
 #if (CONFIG_ROCKCHIP_BOOT_MODE_REG > 0)
 	setup_boot_mode();
