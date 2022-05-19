@@ -452,6 +452,7 @@ config ENV_SIZE
 	hex "Environment Size"
 	depends on !ENV_IS_NOWHERE
 	default 0x20000 if ARCH_SUNXI
+	default 0x8000 if TARGET_EVB_RK3328 || TARGET_EVB_RK3399
 	help
 	  Size of the environment storage area
 

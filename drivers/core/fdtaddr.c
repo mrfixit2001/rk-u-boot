@@ -30,20 +30,25 @@ fdt_addr_t devfdt_get_addr_index(struct udevice *dev, int index)
 		na = fdt_address_cells(gd->fdt_blob,
 				       dev_of_offset(dev->parent));
 		if (na < 1) {
-			debug("bad #address-cells\n");
+			printf("%s: bad #address-cells\n", __func__);
 			return FDT_ADDR_T_NONE;
 		}
 
 		ns = fdt_size_cells(gd->fdt_blob, dev_of_offset(dev->parent));
 		if (ns < 0) {
-			debug("bad #size-cells\n");
+			printf("%s: bad #size-cells\n", __func__);
 			return FDT_ADDR_T_NONE;
 		}
 
-		reg = fdt_getprop(gd->fdt_blob, dev_of_offset(dev), "reg",
-				  &len);
-		if (!reg || (len <= (index * sizeof(fdt32_t) * (na + ns)))) {
-			debug("Req index out of range\n");
+		reg = fdt_getprop(gd->fdt_blob, dev_of_offset(dev), "reg", &len);
+		//printf("%s: results... offset %d... len %d... index %d... ftd32 %ld... na %d... ns %d\n", __func__,
+		//	dev_of_offset(dev), len , index, sizeof(fdt32_t), na, ns);
+		if (!reg) {
+			printf("%s: cannot find reg value\n", __func__);
+			return FDT_ADDR_T_NONE;
+		}
+		if (len <= (index * sizeof(fdt32_t) * (na + ns))) {
+			printf("%s: Req index out of range\n", __func__);
 			return FDT_ADDR_T_NONE;
 		}
 

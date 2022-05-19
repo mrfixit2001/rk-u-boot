@@ -41,13 +41,21 @@
 	BOOT_TARGET_DEVICES_references_RKNAND_without_CONFIG_CMD_RKNAND
 #endif
 
-/* First try to boot from SD (index 1), then eMMC (index 0) */
+/* Split boot targets for SD (index 1) and eMMC (index 0) */
 #if CONFIG_IS_ENABLED(CMD_MMC)
-	#define BOOT_TARGET_MMC(func) \
-		func(MMC, mmc, 1) \
+	#define BOOT_TARGET_MMC1(func) \
+		func(MMC, mmc, 1)
+	#define BOOT_TARGET_MMC0(func) \
 		func(MMC, mmc, 0)
 #else
-	#define BOOT_TARGET_MMC(func)
+	#define BOOT_TARGET_MMC1(func)
+	#define BOOT_TARGET_MMC0(func)
+#endif
+
+#if (CONFIG_IS_ENABLED(CMD_NVME) && CONFIG_IS_ENABLED(CMD_CACHE) && CONFIG_IS_ENABLED(CMD_PCI))
+	#define BOOT_TARGET_NVME(func) func(NVME, nvme, 0)
+#else
+	#define BOOT_TARGET_NVME(func)
 #endif
 
 #if CONFIG_IS_ENABLED(CMD_RKNAND)
@@ -75,9 +83,11 @@
 #endif
 
 #define BOOT_TARGET_DEVICES(func) \
-	BOOT_TARGET_MMC(func) \
+	BOOT_TARGET_MMC1(func) \
+	BOOT_TARGET_NVME(func) \
 	BOOT_TARGET_RKNAND(func) \
 	BOOT_TARGET_USB(func) \
+	BOOT_TARGET_MMC0(func) \
 	BOOT_TARGET_PXE(func) \
 	BOOT_TARGET_DHCP(func)
 
@@ -115,15 +125,19 @@
 
 #ifdef CONFIG_DM_RAMDISK
 #define RKIMG_DET_BOOTDEV \
+	"fdtfile=" CONFIG_DEFAULT_DEVICE_TREE ".dtb" "\0" \
 	"rkimg_bootdev=" \
 	"setenv devtype ramdisk; setenv devnum 0; \0"
 #else
 #define RKIMG_DET_BOOTDEV \
+	"fdtfile=" CONFIG_DEFAULT_DEVICE_TREE ".dtb" "\0" \
 	"rkimg_bootdev=" \
-	"if mmc dev 1 && rkimgtest mmc 1; then " \
+	"if mmc dev 1; then " \
 		"setenv devtype mmc; setenv devnum 1; echo Boot from SDcard;" \
+	"elif nvme dev 0; then " \
+		"setenv devtype nvme; setenv devnum 0; echo Boot from NVMe;" \
 	"elif mmc dev 0; then " \
-		"setenv devtype mmc; setenv devnum 0;" \
+		"setenv devtype mmc; setenv devnum 0; echo Boot from eMMC" \
 	"elif mtd_blk dev 0; then " \
 		"setenv devtype mtd; setenv devnum 0;" \
 	"elif mtd_blk dev 1; then " \
@@ -139,12 +153,19 @@
 	"fi; \0"
 #endif
 
-#if defined(CONFIG_AVB_VBMETA_PUBLIC_KEY_VALIDATE)
-#define RKIMG_BOOTCOMMAND			\
+#ifdef CONFIG_CMD_BOOT_ANDROID
+#define BOOT_ANDROID_COMMAND \
 	"boot_android ${devtype} ${devnum};"
 #else
+#define BOOT_ANDROID_COMMAND
+#endif
+
+#if defined(CONFIG_AVB_VBMETA_PUBLIC_KEY_VALIDATE)
 #define RKIMG_BOOTCOMMAND			\
-	"boot_android ${devtype} ${devnum};"	\
+	BOOT_ANDROID_COMMAND \
+#else
+#define RKIMG_BOOTCOMMAND			\
+	BOOT_ANDROID_COMMAND \
 	"bootrkp;"				\
 	"run distro_bootcmd;"
 #endif
