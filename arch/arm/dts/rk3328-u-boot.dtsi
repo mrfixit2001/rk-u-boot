@@ -11,7 +11,7 @@
 	};
 
 	chosen {
-		u-boot,spl-boot-order = &emmc, &sdmmc;
+		u-boot,spl-boot-order = &sdmmc, &emmc;
 		stdout-path = &uart2;
 	};
 };
@@ -38,6 +38,10 @@
 
 &uart2 {
 	u-boot,dm-pre-reloc;
+};
+
+&efuse {
+	u-boot,dm-spl;
 };
 
 &emmc {

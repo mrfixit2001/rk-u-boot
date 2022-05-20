@@ -6,6 +6,7 @@
 
 #include "rk3328-u-boot.dtsi"
 
+/*
 &vdd_arm {
 	u-boot,dm-spl;
 };
@@ -38,6 +39,7 @@
 	u-boot,dm-spl;
 };
 
+
 &usb_hub {
 	u-boot,dm-spl;
 };
@@ -54,13 +56,10 @@
 	u-boot,dm-spl;
 };
 
-&io_domains {
-	u-boot,dm-spl;
-};
-
 &vcc_phy {
 	u-boot,dm-spl;
 };
+*/
 
 &gmac2phy {
 	u-boot,dm-spl;
@@ -71,5 +70,21 @@
 };
 
 &lt8631ux {
+	u-boot,dm-spl;
+};
+
+&pcfg_pull_up {
+	u-boot,dm-spl;
+};
+
+&pcfg_pull_none {
+	u-boot,dm-spl;
+};
+
+&pwm0_pin_pull_up {
+	u-boot,dm-spl;
+};
+
+&pwm1_pin_pull_up {
 	u-boot,dm-spl;
 };

@@ -401,6 +401,7 @@
 		#size-cells = <1>;
 		clocks = <&cru SCLK_EFUSE>;
 		clock-names = "pclk_efuse";
+		status = "disabled";
 
 		/* Data cells */
 		cpu_id: cpu-id@7 {

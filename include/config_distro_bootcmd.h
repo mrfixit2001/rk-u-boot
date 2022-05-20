@@ -198,8 +198,8 @@
 
 #if TARGET_LEGENDS_RK3328
 #define BOOTENV_LEGENDS \
-    "mmc_boot=part start mmc 0 boot boot_start;" \
-    "part size mmc 0 boot boot_size;" \
+    "mmc_boot=part start mmc ${devnum} boot boot_start;" \
+    "part size mmc ${devnum} boot boot_size;" \
     "mmc read ${kernel_addr_r} ${boot_start} ${boot_size};" \
     "bootm ${kernel_addr_r} ${kernel_addr_r} ${fdtcontroladdr}\0"
 #else

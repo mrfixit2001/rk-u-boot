@@ -19,10 +19,6 @@
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
 		regulator-always-on;
-		regulator-state-mem {
-			regulator-on-in-suspend;
-			regulator-suspend-microvolt = <3300000>;
-		};
 	};
 
 	vcc_1v8: vcc-1v8 {
@@ -31,10 +27,6 @@
 		regulator-min-microvolt = <1800000>;
 		regulator-max-microvolt = <1800000>;
 		regulator-always-on;
-		regulator-state-mem {
-			regulator-on-in-suspend;
-			regulator-suspend-microvolt = <1800000>;
-		};
 	};
 
 	vcc_ddr: vcc-ddr {
@@ -43,9 +35,6 @@
 		regulator-min-microvolt = <1500000>;
 		regulator-max-microvolt = <1500000>;
 		regulator-always-on;
-		regulator-state-mem {
-			regulator-on-in-suspend;
-		};
 	};
 
 	vdd_1v0: vdd-1v0 {
@@ -66,10 +55,6 @@
 		regulator-always-on;
 		regulator-boot-on;
 		regulator-init-microvolt = <10000000>;
-		regulator-state-mem {
-			regulator-on-in-suspend;
-			regulator-suspend-microvolt = <1000000>;
-		};
 	};
 
 	vdd_logic: vdd-logic {
@@ -82,10 +67,6 @@
 		regulator-always-on;
 		regulator-boot-on;
 		regulator-init-microvolt = <10000000>;
-		regulator-state-mem {
-			regulator-on-in-suspend;
-			regulator-suspend-microvolt = <1000000>;
-		};
 	};
 
 	vcc_otg_5v: vcc-otg-5v {
@@ -146,7 +127,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&mcu_pwren>;
 		status = "okay";
-		regulator-boot-on;
+		//regulator-boot-on;
 	};
 
 	usb_hub: usb-hub {
@@ -164,7 +145,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&mcu_gpio_wired_pins>;
 		status = "okay";
-		regulator-boot-on;
+		//regulator-boot-on;
 	};
 };
 
