@@ -126,24 +126,20 @@ static int rockchip_set_serialno(void)
 		struct udevice *dev;
 
 		/* retrieve the device */
-		if (IS_ENABLED(CONFIG_ROCKCHIP_EFUSE))
-			ret = uclass_get_device_by_driver(UCLASS_MISC,
-							  DM_GET_DRIVER(rockchip_efuse),
-							  &dev);
-		else
-			ret = uclass_get_device_by_driver(UCLASS_MISC,
-							  DM_GET_DRIVER(rockchip_otp),
-							  &dev);
-
+#if defined(CONFIG_ROCKCHIP_EFUSE)
+		ret = uclass_get_device_by_driver(UCLASS_MISC, DM_GET_DRIVER(rockchip_efuse), &dev);
+#else
+		ret = uclass_get_device_by_driver(UCLASS_MISC, DM_GET_DRIVER(rockchip_otp), &dev);
+#endif
 		if (ret) {
-			printf("%s: could not find efuse/otp device\n", __func__);
+			printf("%s: could not find efuse/otp device, generating random serial\n", __func__);
 			goto gen_rand_cpu;
 		}
 
 		/* read the cpu_id range from the efuses */
 		ret = misc_read(dev, CPUID_OFF, &cpuid, sizeof(cpuid));
 		if (ret) {
-			printf("%s: read cpuid from efuse/otp failed, ret=%d\n",
+			printf("%s: read cpuid from efuse/otp failed (ret=%d), generating random serial\n",
 			       __func__, ret);
 			goto gen_rand_cpu;
 		} else {

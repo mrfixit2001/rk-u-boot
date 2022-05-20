@@ -21,7 +21,7 @@
 #include <asm/arch/uart.h>
 
 /*
-// This should be in: include/generated/dt-structs-gen.h, but sometimes it's missing?
+// This should be in: include/generated/dt-structs-gen.h, if it comes up missing then you need to create a <board>-u-boot.dtsi file
 struct dtd_rockchip_rk3328_dmc {
 	fdt64_t		reg[12];
 	fdt32_t		rockchip_sdram_params[196];

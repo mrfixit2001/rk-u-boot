@@ -38,7 +38,6 @@
 	};
 
 	vcc_ddr: vcc-ddr {
-		u-boot,dm-pre-reloc;
 		compatible = "regulator-fixed";
 		regulator-name = "vcc_ddr";
 		regulator-min-microvolt = <1500000>;
@@ -138,6 +137,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&mcu_dfu_en>;
 		status = "okay";
+		regulator-boot-on;
 	};
 
 	mcu: mcu {
@@ -146,6 +146,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&mcu_pwren>;
 		status = "okay";
+		regulator-boot-on;
 	};
 
 	usb_hub: usb-hub {
@@ -187,7 +188,7 @@
 	status = "okay";
 };
 
-&io_domains{
+&io_domains {
 	status = "okay";
 	vccio1-supply = <&vcc_io>;
 	vccio2-supply = <&vcc_1v8>;
@@ -199,9 +200,14 @@
 };
 
 &emmc {
+	max-frequency = <120000000>;
+	mmc-hs200-1_8v;
 	bus-width = <8>;
 	cap-mmc-highspeed;
+	supports-emmc;
+	disable-wp;
 	non-removable;
+	num-slots = <1>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&emmc_clk &emmc_cmd &emmc_bus8>;
 	status = "okay";
@@ -222,55 +228,55 @@
 
 	usb {
 		usb20_otg_drv: usb20-otg-drv {
-			rockchip,pins = <RK_GPIO0 RK_PA0 RK_FUNC_GPIO &pcfg_pull_none>;
+			rockchip,pins = <0 RK_PA0 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 
 		usb20_host_drv: usb20-host-drv {
-			rockchip,pins = <RK_GPIO3 RK_PB0 RK_FUNC_GPIO &pcfg_pull_none>;
+			rockchip,pins = <3 RK_PB0 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 
 		usb30_host_drv: usb30-host-drv {
-			rockchip,pins = <RK_GPIO3 RK_PA2 RK_FUNC_GPIO &pcfg_pull_none>;
+			rockchip,pins = <3 RK_PA2 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
 
 	lt8631{
 		lt8631_control_pin: lt8631-control-pin {
-			rockchip,pins = <RK_GPIO1 RK_PA3 RK_FUNC_GPIO &pcfg_pull_none>,
-							<RK_GPIO1 RK_PB3 RK_FUNC_GPIO &pcfg_pull_none>;
+			rockchip,pins = <1 RK_PA3 RK_FUNC_GPIO &pcfg_pull_none>,
+					<1 RK_PB3 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
 
 	mcu_dfu {
 		mcu_dfu_en: mcu-dfu-en {
-			rockchip,pins = <RK_GPIO2 RK_PA6 RK_FUNC_GPIO &pcfg_pull_up>;
+			rockchip,pins = <2 RK_PA6 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 	};
 
 	mcu {
 		mcu_pwren: mcu-pwren {
-			rockchip,pins = <RK_GPIO3 RK_PA1 RK_FUNC_GPIO &pcfg_pull_up>;
+			rockchip,pins = <3 RK_PA1 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 	};
 
 	usb_hub_pin {
 		usb_hub_pwren: usb-hub-pwren {
-			rockchip,pins = <RK_GPIO3 RK_PB0 RK_FUNC_GPIO &pcfg_pull_up>;
+			rockchip,pins = <3 RK_PB0 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 	};
 
 	mcu_gpio_wired_pin {
 		mcu_gpio_wired_pins: mcu-gpio-wired-pins {
 			rockchip,pins =
-				<RK_GPIO1 RK_PA2 RK_FUNC_GPIO &pcfg_pull_none>,
-				<RK_GPIO2 RK_PC4 RK_FUNC_GPIO &pcfg_pull_none>,
-				<RK_GPIO1 RK_PA4 RK_FUNC_GPIO &pcfg_pull_none>,
-				<RK_GPIO2 RK_PC6 RK_FUNC_GPIO &pcfg_pull_none>,
-				<RK_GPIO2 RK_PC3 RK_FUNC_GPIO &pcfg_pull_none>,
-				<RK_GPIO2 RK_PA2 RK_FUNC_GPIO &pcfg_pull_none>,
-				<RK_GPIO2 RK_PC1 RK_FUNC_GPIO &pcfg_pull_none>,
-				<RK_GPIO0 RK_PD3 RK_FUNC_GPIO &pcfg_pull_none>,
- 				<RK_GPIO1 RK_PC5 RK_FUNC_GPIO &pcfg_pull_up>;
+				<1 RK_PA2 RK_FUNC_GPIO &pcfg_pull_none>,
+				<2 RK_PC4 RK_FUNC_GPIO &pcfg_pull_none>,
+				<1 RK_PA4 RK_FUNC_GPIO &pcfg_pull_none>,
+				<2 RK_PC6 RK_FUNC_GPIO &pcfg_pull_none>,
+				<2 RK_PC3 RK_FUNC_GPIO &pcfg_pull_none>,
+				<2 RK_PA2 RK_FUNC_GPIO &pcfg_pull_none>,
+				<2 RK_PC1 RK_FUNC_GPIO &pcfg_pull_none>,
+				<0 RK_PD3 RK_FUNC_GPIO &pcfg_pull_none>,
+ 				<1 RK_PC5 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 	};
 };
@@ -282,8 +288,8 @@
 	lt8631ux: lt8631ux@5a {
 		compatible = "lontium,lt8631ux";
 		reg = <0x5a>;
-		lt8631_pwrdn-gpio = <&gpio1 RK_PA3 GPIO_ACTIVE_HIGH>;
-		lt8631_reset-gpio = <&gpio1 RK_PB3 GPIO_ACTIVE_HIGH>;
+		lt8631_pwrdn-gpio = <1 RK_PA3 GPIO_ACTIVE_HIGH>;
+		lt8631_reset-gpio = <1 RK_PB3 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&lt8631_control_pin>;
 	};
@@ -311,7 +317,7 @@
 };
 
 &u3phy {
-	vbus-supply = <&vcc_host_5v>;
+	//vbus-supply = <&vcc_host_5v>;
 	status = "okay";
 };
 

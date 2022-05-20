@@ -11,6 +11,10 @@ config TARGET_EVB_RK3328
 	  with full function and phisical connectors support like
 	  usb2.0 host ports, LVDS, JTAG, MAC, SDcard, HDMI, USB-2-serial...
 
+config TARGET_LEGENDS_RK3328
+	bool "RK3328 Legends board"
+	select BOARD_LATE_INIT
+
 endchoice
 
 config SYS_SOC

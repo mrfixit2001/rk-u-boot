@@ -80,7 +80,7 @@ u32 spl_boot_device(void)
 
 		case BROM_BOOTSOURCE_USB:
 			printf("booted from USB\n");
-			return BOOT_DEVICE_MMC1;
+			return BOOT_DEVICE_USB;
 	}
 
 	return boot_device;

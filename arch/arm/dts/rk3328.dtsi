@@ -396,7 +396,7 @@
 
 	efuse: efuse@ff260000 {
 		compatible = "rockchip,rk3328-efuse";
-		reg = <0x0 0xff260000 0x0 0x80>;
+		reg = <0x0 0xff260000 0x0 0x50>;
 		#address-cells = <1>;
 		#size-cells = <1>;
 		clocks = <&cru SCLK_EFUSE>;

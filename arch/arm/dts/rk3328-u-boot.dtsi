@@ -11,15 +11,13 @@
 	};
 
 	chosen {
-		u-boot,spl-boot-order = &sdmmc, &emmc;
+		u-boot,spl-boot-order = &emmc, &sdmmc;
 		stdout-path = &uart2;
 	};
-
 };
 
 &psci {
 	u-boot,dm-pre-reloc;
-	status = "okay";
 };
 
 &cru {
@@ -52,14 +50,13 @@
 
 &saradc {
 	u-boot,dm-spl;
-	status = "okay";
-};
-
-&usb20_otg {
-	u-boot,dm-spl;
 };
 
 &usb2phy_grf {
+	u-boot,dm-spl;
+};
+
+&usb3phy_grf {
 	u-boot,dm-spl;
 };
 
@@ -75,7 +72,35 @@
 	u-boot,dm-spl;
 };
 
+&u3phy {
+	u-boot,dm-spl;
+};
+
+&u3phy_utmi {
+	u-boot,dm-spl;
+};
+
+&u3phy_pipe {
+	u-boot,dm-spl;
+};
+
 &usb_host0_ehci {
+	u-boot,dm-spl;
+};
+
+&usb_host0_ohci {
+	u-boot,dm-spl;
+};
+
+&usb20_otg {
+	u-boot,dm-spl;
+};
+
+&usbdrd3 {
+	u-boot,dm-spl;
+};
+
+&usbdrd_dwc3 {
 	u-boot,dm-spl;
 };
 
@@ -98,3 +123,32 @@
 &sdmmc0_dectn {
 	u-boot,dm-spl;
 };
+
+&emmc_clk {
+	u-boot,dm-spl;
+};
+
+&emmc_cmd {
+	u-boot,dm-spl;
+};
+
+&emmc_bus8 {
+	u-boot,dm-spl;
+};
+
+&pwm0 {
+	u-boot,dm-spl;
+};
+
+&pwm1 {
+	u-boot,dm-spl;
+};
+
+&pwm2 {
+	u-boot,dm-spl;
+};
+
+&pwm3 {
+	u-boot,dm-spl;
+};
+

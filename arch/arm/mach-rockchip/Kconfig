@@ -266,6 +266,10 @@ config ROCKCHIP_RK3328
 
 if ROCKCHIP_RK3328
 
+config RK3328_KERNEL_ADDR_R
+	string "Kernel Address"
+        default "0x00280000"
+
 config TPL_LDSCRIPT
 	default "arch/arm/mach-rockchip/u-boot-tpl-v8.lds"
 

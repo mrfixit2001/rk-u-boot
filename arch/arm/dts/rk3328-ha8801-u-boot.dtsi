@@ -1,0 +1,75 @@
+/*
+ * (C) Copyright 2018 Rockchip Electronics Co., Ltd
+ *
+ * SPDX-License-Identifier:     GPL-2.0+
+ */
+
+#include "rk3328-u-boot.dtsi"
+
+&vdd_arm {
+	u-boot,dm-spl;
+};
+
+&vcc_ddr {
+	u-boot,dm-spl;
+};
+
+&vdd_logic {
+	u-boot,dm-spl;
+};
+
+&vcc_otg_5v {
+	u-boot,dm-spl;
+};
+
+&vcc_usb20_5v {
+	u-boot,dm-spl;
+};
+
+&vcc_host_5v {
+	u-boot,dm-spl;
+};
+
+&vcc_io {
+	u-boot,dm-spl;
+};
+
+&vcc_1v8 {
+	u-boot,dm-spl;
+};
+
+&usb_hub {
+	u-boot,dm-spl;
+};
+
+&mcu {
+	u-boot,dm-spl;
+};
+
+&mcu_dfu {
+	u-boot,dm-spl;
+};
+
+&mcu_gpio_wired_pin {
+	u-boot,dm-spl;
+};
+
+&io_domains {
+	u-boot,dm-spl;
+};
+
+&vcc_phy {
+	u-boot,dm-spl;
+};
+
+&gmac2phy {
+	u-boot,dm-spl;
+};
+
+&i2c0 {
+	u-boot,dm-spl;
+};
+
+&lt8631ux {
+	u-boot,dm-spl;
+};

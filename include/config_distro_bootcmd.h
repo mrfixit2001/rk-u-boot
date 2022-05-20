@@ -188,6 +188,24 @@
 	BOOT_TARGET_DEVICES_references_NVME_without_CONFIG_NVME
 #endif
 
+#ifdef CONFIG_LT8631UX
+#define BOOTENV_RUN_I2C0_INIT	"run i2c0_init; "
+#define BOOTENV_I2C0_INIT 	"i2c0_init=i2c dev 0; i2c probe\0"
+#else
+#define BOOTENV_RUN_I2C0_INIT
+#define BOOTENV_I2C0_INIT
+#endif
+
+#if TARGET_LEGENDS_RK3328
+#define BOOTENV_LEGENDS \
+    "mmc_boot=part start mmc 0 boot boot_start;" \
+    "part size mmc 0 boot boot_size;" \
+    "mmc read ${kernel_addr_r} ${boot_start} ${boot_size};" \
+    "bootm ${kernel_addr_r} ${kernel_addr_r} ${fdtcontroladdr}\0"
+#else
+#define BOOTENV_LEGENDS
+#endif
+
 #ifdef CONFIG_SCSI
 #define BOOTENV_RUN_SCSI_INIT "run scsi_init; "
 #define BOOTENV_SET_SCSI_NEED_INIT "setenv scsi_need_init; "
@@ -413,9 +431,12 @@
 	\
 	"distro_bootcmd=" BOOTENV_SET_SCSI_NEED_INIT                      \
 		BOOTENV_SET_NVME_NEED_INIT                                \
+		BOOTENV_RUN_I2C0_INIT                                     \
 		"for target in ${boot_targets}; do "                      \
 			"run bootcmd_${target}; "                         \
-		"done\0"
+		"done\0"                                                  \
+		BOOTENV_I2C0_INIT                                         \
+		BOOTENV_LEGENDS
 
 #ifndef CONFIG_BOOTCOMMAND
 #define CONFIG_BOOTCOMMAND "run distro_bootcmd"

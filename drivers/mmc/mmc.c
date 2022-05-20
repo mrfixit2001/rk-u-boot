@@ -339,6 +339,14 @@ re_init_retry:
 	return blkcnt;
 }
 
+#if !CONFIG_IS_ENABLED(DM_MMC)
+static void mmc_set_ios(struct mmc *mmc)
+{
+	if (mmc->cfg->ops->set_ios)
+		mmc->cfg->ops->set_ios(mmc);
+}
+#endif
+
 static void mmc_set_timing(struct mmc *mmc, uint timing)
 {
 	mmc->timing = timing;
@@ -1191,14 +1199,6 @@ static const u8 multipliers[] = {
 	70,
 	80,
 };
-
-#if !CONFIG_IS_ENABLED(DM_MMC)
-static void mmc_set_ios(struct mmc *mmc)
-{
-	if (mmc->cfg->ops->set_ios)
-		mmc->cfg->ops->set_ios(mmc);
-}
-#endif
 
 void mmc_set_clock(struct mmc *mmc, uint clock)
 {
