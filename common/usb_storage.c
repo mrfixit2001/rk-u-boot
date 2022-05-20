@@ -300,26 +300,50 @@ void usb_stor_reset(void)
  */
 int usb_stor_scan(int mode)
 {
+	struct udevice *bus;
+	struct uclass *uc;
+	int i, ret, old_async;
+
 	if (mode == 1)
 		printf("       scanning usb for storage devices... ");
 
-#if !CONFIG_IS_ENABLED(DM_USB)
-	unsigned char i;
-
-	usb_disable_asynch(1); /* asynch transfer not allowed */
+	old_async = usb_disable_asynch(1); /* asynch transfer not allowed */
 
 	usb_stor_reset();
+#if !CONFIG_IS_ENABLED(DM_USB)
 	for (i = 0; i < USB_MAX_DEVICE; i++) {
 		struct usb_device *dev;
-
 		dev = usb_get_dev_index(i); /* get device */
+		if (!dev)
+			break; /* no more devices available */
+
 		debug("i=%d\n", i);
+
 		if (usb_stor_probe_device(dev))
 			break;
 	} /* for */
 
-	usb_disable_asynch(0); /* asynch transfer allowed */
+#else
+	ret = uclass_get(UCLASS_USB, &uc);
+	if (ret)
+		return ret;
+
+	uclass_foreach_dev(bus, uc) {
+		for (i = 0; i < USB_MAX_DEVICE; i++) {
+			struct usb_device *dev;
+			dev = usb_get_dev_index(bus, i); /* get device */
+			if (!dev)
+				break; /* no more devices available */
+
+			debug("i=%d, %s\n", i, dev ? dev->dev->name : "(done)");
+
+			if (usb_stor_probe_device(dev))
+				break;
+		}
+	}
 #endif
+	usb_disable_asynch(old_async); /* asynch transfer allowed */
+
 	printf("%d Storage Device(s) found\n", usb_max_devs);
 	if (usb_max_devs > 0)
 		return 0;

@@ -47,6 +47,7 @@ dtb-$(CONFIG_ARCH_ROCKCHIP) += \
 	rk3288-vyasa.dtb \
 	rk3308-evb.dtb \
 	rk3328-evb.dtb \
+	rk3328-ha8801.dtb \
 	rk3368-lion.dtb \
 	rk3368-sheep.dtb \
 	rk3368-geekbox.dtb \

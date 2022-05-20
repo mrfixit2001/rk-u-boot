@@ -20,6 +20,14 @@
 #include <asm/arch/sdram_rk3328.h>
 #include <asm/arch/uart.h>
 
+/*
+// This should be in: include/generated/dt-structs-gen.h, but sometimes it's missing?
+struct dtd_rockchip_rk3328_dmc {
+	fdt64_t		reg[12];
+	fdt32_t		rockchip_sdram_params[196];
+};
+*/
+
 DECLARE_GLOBAL_DATA_PTR;
 struct dram_info {
 #ifdef CONFIG_TPL_BUILD

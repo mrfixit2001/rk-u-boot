@@ -75,6 +75,22 @@
 	};
 };
 
+&cpu0 {
+	cpu-supply = <&vdd_arm>;
+};
+
+&cpu1 {
+	cpu-supply = <&vdd_arm>;
+};
+
+&cpu2 {
+	cpu-supply = <&vdd_arm>;
+};
+
+&cpu3 {
+	cpu-supply = <&vdd_arm>;
+};
+
 &uart2 {
 	status = "okay";
 };
@@ -134,6 +150,18 @@
 	status = "okay";
 };
 
+&io_domains {
+	status = "okay";
+
+	vccio1-supply = <&vcc_io>;
+	vccio2-supply = <&vcc_18emmc>;
+	vccio3-supply = <&vcc_io>;
+	vccio4-supply = <&vdd_18>;
+	vccio5-supply = <&vcc_io>;
+	vccio6-supply = <&vcc_io>;
+	pmuio-supply = <&vcc_io>;
+};
+
 &u2phy {
 	status = "okay";
 };
@@ -160,7 +188,7 @@
 };
 
 &usb_host0_ehci {
-	vbus-supply = <&vcc5v0_otg>;
+	//vbus-supply = <&vcc5v0_otg>;
 	status = "okay";
 };
 
@@ -169,7 +197,8 @@
 };
 
 &usb20_otg {
-	vbus-supply = <&vcc5v0_otg>;
+	//vbus-supply = <&vcc5v0_otg>;
+	dr_mode = "host";
 	status = "okay";
 };
 
@@ -178,6 +207,7 @@
 };
 
 &usbdrd_dwc3 {
+	dr_mode = "host";
 	status = "okay";
 };
 
