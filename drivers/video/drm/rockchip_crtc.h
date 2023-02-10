@@ -12,8 +12,10 @@
 struct rockchip_vp {
 	bool enable;
 	u8 bg_ovl_dly;
+	u8 primary_plane_id;
 	int output_type;
 	u32 plane_mask;
+	int cursor_plane;
 };
 
 struct rockchip_crtc {
@@ -59,4 +61,5 @@ extern const struct vop_data rk3328_vop;
 extern const struct vop_data rv1108_vop;
 extern const struct vop_data rv1126_vop;
 extern const struct vop2_data rk3568_vop;
+extern const struct vop2_data rk3588_vop;
 #endif

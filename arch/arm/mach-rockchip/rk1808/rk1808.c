@@ -6,6 +6,7 @@
 #include <common.h>
 #include <android_image.h>
 #include <boot_rkimg.h>
+#include <ramdisk.h>
 #include <asm/io.h>
 #include <asm/arch/grf_rk1808.h>
 #include <asm/arch/hardware.h>
@@ -158,7 +159,7 @@ int rk_board_fdt_fixup(void *blob)
 
 	debug("soc=0x%x, flags=0x%x\n", t->u.soc.name, t->u.soc.flags);
 
-	if (t->u.soc.flags != SOC_FLAGS_ET00)
+	if (t->u.soc.flags != 0x45543030)
 		return 0;
 
 	ph_pu_2ma = fdt_get_phandle(gd->fdt_blob,
@@ -194,6 +195,15 @@ static int env_fixup_ramdisk_addr_r(void)
 	disk_partition_t info;
 	ulong ramdisk_addr_r;
 	int ret;
+
+	/*
+	 * Don't rely on CONFIG_DM_RAMDISK since it can be a default
+	 * configuration after disk/part_rkram.c was introduced.
+	 *
+	 * This is compatible code.
+	 */
+	if (!dm_ramdisk_is_enabled())
+		return 0;
 
 	dev_desc = rockchip_get_bootdev();
 	if (!dev_desc) {
