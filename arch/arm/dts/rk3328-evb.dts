@@ -91,9 +91,9 @@
 	cpu-supply = <&vdd_arm>;
 };
 
-&uart2 {
+/*&uart2 {
 	status = "okay";
-};
+};*/
 
 &saradc {
 	status = "okay";
@@ -112,9 +112,10 @@
 	status = "okay";
 };
 
+/*
 &crypto {
 	status = "okay";
-};
+};*/
 
 &efuse {
 	status = "okay";

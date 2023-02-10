@@ -232,12 +232,10 @@ static int rockchip_set_ethaddr(void)
 			       __func__, ret);
 	}
 #elif CONFIG_IS_ENABLED(CMD_NET)
-	int ret;
 	const char *cpuid = env_get("cpuid#");
 	u8 hash[SHA256_SUM_LEN];
 	int size = sizeof(hash);
 	u8 mac_addr[6];
-	char buf[ARP_HLEN_ASCII + 1];
 
 	/* Only generate a MAC address, if none is set in the environment */
 	if (env_get("ethaddr"))

@@ -179,6 +179,7 @@
 	"else" \
 		"setenv devtype ramdisk; setenv devnum 0;" \
 	"fi; \0"
+#endif
 
 #ifdef CONFIG_CMD_BOOT_ANDROID
 #define BOOT_ANDROID_COMMAND \

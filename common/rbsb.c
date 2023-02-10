@@ -301,7 +301,7 @@ io_mode(int fd, int n)
 
 		tcsetattr(fd,TCSADRAIN,&tty);
 
-		return OK;
+		break;
 	case 1:
 	case 3:
 		if(!did0) {
@@ -332,7 +332,7 @@ io_mode(int fd, int n)
 		tty.c_cc[VTIME] = 1;	/* or in this many tenths of seconds */
 		tcsetattr(fd,TCSADRAIN,&tty);
 		Baudrate = getspeed(cfgetospeed(&tty));
-		return OK;
+		break;
 	case 0:
 		if(!did0)
 			return ERROR;
@@ -341,7 +341,7 @@ io_mode(int fd, int n)
 		tcsetattr (fd,TCSADRAIN,&oldtty);
 		tcflow (fd,TCOON); /* restart output */
 
-		return OK;
+		break;
 #endif
 
 #ifdef USE_TERMIO
@@ -377,7 +377,7 @@ io_mode(int fd, int n)
 
 		(void) ioctl(fd, TCSETAW, &tty);
 		did0 = TRUE;
-		return OK;
+		break;
 	case 1:
 	case 3:
 		if(!did0)
@@ -404,7 +404,7 @@ io_mode(int fd, int n)
 		(void) ioctl(fd, TCSETAW, &tty);
 		did0 = TRUE;
 		Baudrate = getspeed(tty.c_cflag & CBAUD);
-		return OK;
+		break;
 	case 0:
 		if(!did0)
 			return ERROR;
@@ -412,7 +412,7 @@ io_mode(int fd, int n)
 		(void) ioctl(fd, TCFLSH, 0);	/* Flush input queue */
 		(void) ioctl(fd, TCSETAW, &oldtty);	/* Restore modes */
 		(void) ioctl(fd, TCXONC,1);	/* Restart output */
-		return OK;
+		break;
 #endif
 
 
@@ -450,7 +450,7 @@ io_mode(int fd, int n)
 		bibi(99);	/* un-raw doesn't work w/o lit out */
 #endif
 		did0 = TRUE;
-		return OK;
+		break;
 	case 1:
 	case 3:
 		if(!did0) {
@@ -467,7 +467,7 @@ io_mode(int fd, int n)
 		ioctl(fd, TIOCSETP, &tty);
 		did0 = TRUE;
 		Baudrate = getspeed(tty.sg_ospeed);
-		return OK;
+		break;
 	case 0:
 		if(!did0)
 			return ERROR;
@@ -481,12 +481,12 @@ io_mode(int fd, int n)
 		{ int x=1; ioctl(fd,TIOCFLUSH,&x); }
 #endif
 #endif
-
-		return OK;
+		break;
 	default:
 		return ERROR;
 	}
 #endif
+	return OK;
 }
 
 void
