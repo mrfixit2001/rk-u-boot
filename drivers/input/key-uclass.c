@@ -7,9 +7,10 @@
 #include <common.h>
 #include <adc.h>
 #include <dm.h>
+#include <irq-generic.h>
 #include <key.h>
 #include <dm/lists.h>
-#include <irq-generic.h>
+#include <dm/uclass-internal.h>
 
 #define KEY_WARN(fmt, args...)	printf("Key Warn: "fmt, ##args)
 #define KEY_ERR(fmt, args...)	printf("Key Error: "fmt, ##args)
@@ -162,7 +163,24 @@ try_again:
 	return event;
 }
 
-#if defined(CONFIG_IRQ) && !defined(CONFIG_SPL_BUILD)
+int key_exist(int code)
+{
+	struct dm_key_uclass_platdata *uc_key;
+	struct udevice *dev;
+
+	for (uclass_find_first_device(UCLASS_KEY, &dev);
+	     dev;
+	     uclass_find_next_device(&dev)) {
+		uc_key = dev_get_uclass_platdata(dev);
+
+		if (uc_key->code == code)
+			return 1;
+	}
+
+	return 0;
+}
+
+#if CONFIG_IS_ENABLED(IRQ)
 #if defined(CONFIG_PWRKEY_DNL_TRIGGER_NUM) && \
 		(CONFIG_PWRKEY_DNL_TRIGGER_NUM > 0)
 static void power_key_download(struct dm_key_uclass_platdata *uc_key)
@@ -255,9 +273,12 @@ int key_bind_children(struct udevice *dev, const char *drv_name)
 static int key_post_probe(struct udevice *dev)
 {
 	struct dm_key_uclass_platdata *uc_key;
-	int margin = 30;
 	int ret;
-
+#ifdef CONFIG_SARADC_ROCKCHIP_V2
+	int margin = 120;
+#else
+	int margin = 30;
+#endif
 	uc_key = dev_get_uclass_platdata(dev);
 	if (!uc_key)
 		return -ENXIO;
@@ -272,7 +293,7 @@ static int key_post_probe(struct udevice *dev)
 					uc_key->adcval - margin : 0;
 	} else {
 		if (uc_key->code == KEY_POWER) {
-#if defined(CONFIG_IRQ) && !defined(CONFIG_SPL_BUILD)
+#if CONFIG_IS_ENABLED(IRQ)
 			int irq;
 
 			if (uc_key->skip_irq_init)
